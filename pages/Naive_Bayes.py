@@ -238,10 +238,10 @@ else:
     uploaded_file = st.sidebar.file_uploader("Choose a file")
     if uploaded_file is not None:
         df = pd.read_csv(uploaded_file)
-        percent_training = int(len(df)*0.90)
+        #percent_training = int(len(df)*0.90)
         df = df.sample(frac=1)
         st.sidebar.write(df['content'].head())
-        df = df.iloc[percent_training:]
+        #df = df.iloc[percent_training:]
         df['removed_symbol'] = df['content'].apply(lambda x: remove_symbol(x))
         df['clean_punct'] = df['removed_symbol'].apply(clean_punct)
         df['clean_double_space'] = df['clean_punct'].apply(
