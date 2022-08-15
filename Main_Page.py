@@ -78,7 +78,7 @@ list_data = list(zip(d_test['liststring'], d_test['compound_score'],
 
 st.subheader("Classify Result Based on The Different Algorithm")
 st.write(d_test)
-st.subheader("Classify Result Based on The Different Algorithm In JSON Format")
+st.subheader("Classify Result Based on The Different Algorithm In List Format")
 st.write(list_data)
 
 
