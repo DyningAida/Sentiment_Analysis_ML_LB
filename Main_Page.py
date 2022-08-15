@@ -1,5 +1,3 @@
-from io import StringIO
-from tkinter.tix import COLUMN
 import streamlit as st
 import pandas as pd
 import nltk

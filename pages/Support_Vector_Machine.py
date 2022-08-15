@@ -6,7 +6,7 @@ from sklearn import svm
 from sklearn.metrics import classification_report
 import pandas as pd
 import streamlit as st
-from wordcloud import WordCloud, STOPWORDS, ImageColorGenerator
+from wordcloud import WordCloud, STOPWORDS
 import matplotlib.pyplot as plt
 import re
 import ast

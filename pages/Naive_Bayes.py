@@ -1,5 +1,4 @@
-from io import StringIO
-from wordcloud import WordCloud, STOPWORDS, ImageColorGenerator
+from wordcloud import WordCloud, STOPWORDS
 import matplotlib.pyplot as plt
 import streamlit as st
 import pandas as pd
