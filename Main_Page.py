@@ -4,6 +4,7 @@ import nltk
 import numpy as np
 import re
 import ast
+from PIL import Image
 import plotly_express as px
 from sklearn import svm
 from nltk.corpus import stopwords
@@ -16,15 +17,17 @@ from sklearn.feature_extraction.text import CountVectorizer
 
 """
 # Sentiment Analysis App
-This App is using The Mixed of Machine Learning and Lexicon Based Learning to do Sentiment Analyze
+This App is using The Mixed of Machine Learning and Lexicon Based Learning to do Sentiment Analyze.
+The Algorithms used Are Multinomial Naive Bayes, Support Vector Machine, and Lexicon Based.
 """
+
 st.sidebar.markdown("# Main page")
+
+image = Image.open('emotions.jpeg')
+st.image(image, caption="Sentiment Analysis describe the user Emotions or Satisfaction about Something. Let's try analyze sentiment!")
 
 # read a CSV file inside the 'data" folder next to 'app.py'
 df = pd.read_csv("./cleaned_data_translated.csv")
-
-st.header("Reviews App Dataset")  # add a title
-st.write(df)  # visualize my dataframe in the Streamlit app
 
 analyser = SentimentIntensityAnalyzer()
 
@@ -76,10 +79,10 @@ d_test['svm_predicted'] = y_pred2
 list_data = list(zip(d_test['liststring'], d_test['compound_score'],
                      d_test['nb_predicted'], d_test['svm_predicted']))
 
-st.subheader("Classify Result Based on The Different Algorithm")
-st.write(d_test)
-st.subheader("Classify Result Based on The Different Algorithm In List Format")
-st.write(list_data)
+# st.subheader("Classify Result Based on The Different Algorithm")
+# st.write(d_test)
+# st.subheader("Classify Result Based on The Different Algorithm In List Format")
+# st.write(list_data)
 
 
 option = st.sidebar.selectbox(
@@ -171,7 +174,7 @@ def sentiment_calc(text):
 
 
 def checkslang(text):
-    #datalist = []
+    # datalist = []
     for u, t in enumerate(text):
         if t in slangs_new.keys():
             text[u] = slangs_new[t]
@@ -185,16 +188,6 @@ def untokenized(text):
         return data
 
 
-def stats(dataframe):
-    st.sidebar.header('Data statistics')
-    st.sidebar.write(dataframe.describe())
-
-
-def data_header(dataframe):
-    st.sidebar.header('Data header')
-    st.sidebar.write(dataframe.head())
-
-
 if option == 'Insert Text':
     txt = st.sidebar.text_input('Text to analyze',)
     if len(txt) > 0:
@@ -205,24 +198,28 @@ if option == 'Insert Text':
         text_new = clean_stopwords(text_new)
         text_new = stemmer.stem(text_new)
         text_new = text_new.split()
-        #text_new = checkslang(text_new)
+        # text_new = checkslang(text_new)
         for u, t in enumerate(text_new):
             if t in slangs_new.keys():
                 text_new[u] = slangs_new[t]
         data_new = ' '.join(text_new)
-        st.sidebar.write('Cleaned text :', data_new)
+        st.write('Cleaned text :', data_new)
         result_nb = clf.predict(vectorizer.transform([data_new]))
-        st.sidebar.write('Predicted Sentiment Using NB:', result_nb)
+        st.write('Predicted Sentiment Using NB:', result_nb)
+        st.write('Accuracy using NB:', clf.score(df_test_att, df_test_label))
         result_svm = classifier_svm.predict(vectorizer.transform([data_new]))
-        st.sidebar.write('Predicted Sentiment Using SVM:', result_svm)
+        st.write('Predicted Sentiment Using SVM:', result_svm)
+        st.write('Accuracy using SVM:', classifier_svm.score(
+            df_test_att, df_test_label))
 else:
     uploaded_file = st.sidebar.file_uploader("Choose a file")
     if uploaded_file is not None:
         df = pd.read_csv(uploaded_file)
-        #percent_training = int(len(df)*0.90)
         df = df.sample(frac=1)
-        st.sidebar.write(df['content'].head())
-        #df = df.iloc[percent_training:]
+        st.header("Dataset Uploaded")
+        st.write(df)
+        st.header("Data Used")
+        st.write(df['content'].head())
         df['removed_symbol'] = df['content'].apply(lambda x: remove_symbol(x))
         df['clean_punct'] = df['removed_symbol'].apply(clean_punct)
         df['clean_double_space'] = df['clean_punct'].apply(
@@ -237,5 +234,38 @@ else:
         data_test = vectorizer.transform(df['liststring'])
         y_pred_nb = clf.predict(data_test)
         y_pred_svm = classifier_svm.predict(data_test)
-        st.sidebar.write('Predicted Sentiment Using NB:', y_pred_nb)
-        st.sidebar.write('Predicted Sentiment Using SVM:', y_pred_svm)
+        df['nb_predicted'] = y_pred_nb
+        df['svm_predicted'] = y_pred_svm
+        st.write('Predicted Sentiment Using NB:', y_pred_nb)
+        st.write('Predicted Sentiment Using SVM:', y_pred_svm)
+        st.header('Classification Result Using The Different Algorithm')
+        list_data = list(zip(df['liststring'],
+                             df['nb_predicted'], df['svm_predicted']))
+        st.write(df[['content', 'liststring', 'nb_predicted', 'svm_predicted']])
+        st.header("Positive Classification")
+        if df.loc[df['nb_predicted'] == 'positive'] is not None:
+            df['filter_pos_nb'] = (
+                df['content'].loc[df['nb_predicted'] == 'positive'])
+            st.write(df['filter_pos_nb'])
+        if df.loc[df['svm_predicted'] == 'positive'] is not None:
+            df['filter_pos_svm'] = (
+                df['content'].loc[df['svm_predicted'] == 'positive'])
+            st.write(df['filter_pos_svm'])
+        st.header("Neutral Classification")
+        if df.loc[df['nb_predicted'] == 'neutral'] is not None:
+            df['filter_net_nb'] = (
+                df['content'].loc[df['nb_predicted'] == 'neutral'])
+            st.write(df['filter_net_nb'])
+        if df.loc[df['svm_predicted'] == 'neutral'] is not None:
+            df['filter_net_svm'] = (
+                df['content'].loc[df['svm_predicted'] == 'neutral'])
+            st.write(df['filter_net_svm'])
+        st.header("Negative Classification")
+        if df.loc[df['nb_predicted'] == 'negative'] is not None:
+            df['filter_neg_nb'] = (
+                df['content'].loc[df['nb_predicted'] == 'negative'])
+            st.write(df['filter_neg_nb'])
+        if df.loc[df['svm_predicted'] == 'negative'] is not None:
+            df['filter_neg_svm'] = (
+                df['content'].loc[df['svm_predicted'] == 'negative'])
+            st.write(df['filter_neg_svm'])

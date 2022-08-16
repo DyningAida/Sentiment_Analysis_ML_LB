@@ -62,61 +62,17 @@ clf = nb.fit(df_train_att, df_train_label)
 clf
 y_pred = clf.predict(df_test_att)
 d_test['nb_predicted'] = y_pred
-list_data = list(zip(d_test['liststring'], d_test['compound_score'],
-                     d_test['nb_predicted']))
-filter_pos_nb = [row['liststring'] for index, row in d_test.iterrows(
-) if row['nb_predicted'] == 'positive']
-filter_neg_nb = [row['liststring'] for index, row in d_test.iterrows(
-) if row['nb_predicted'] == 'negative']
-filter_net_nb = [row['liststring'] for index, row in d_test.iterrows(
-) if row['nb_predicted'] == 'neutral']
+
+option = st.sidebar.selectbox(
+    'Insert Text or Upload Files',
+    ('Insert Text', 'Upload File'))
+
+st.sidebar.write('You selected:', option)
 
 # classification report
 evaluasi = classification_report(df_test_label, y_pred)
 st.header("Classification Report")
 st.write(evaluasi)
-
-st.header("Predicted Data")
-df_pred = pd.DataFrame(list_data)
-st.write(df_pred)
-
-# diagram pie
-st.header("Pie Chart of Classified Sentiment")
-pie_chart = px.pie(data_frame=d_test,
-                   names='nb_predicted', color_discrete_sequence=px.colors.sequential.RdBu)
-st.write(pie_chart)
-
-st.header("Classified Text")
-st.subheader("Positive Text")
-df_pos_classified = pd.DataFrame(filter_pos_nb)
-st.write(df_pos_classified)
-st.subheader("Neutral Text")
-df_net_classified = pd.DataFrame(filter_net_nb)
-st.write(df_net_classified)
-st.subheader("Negative Text")
-df_neg_classified = pd.DataFrame(filter_neg_nb)
-st.write(df_neg_classified)
-
-# wordcloud
-st.header("Wordcloud Result")
-text_used = df_pred
-text_used = text_used.values.tolist()
-
-wordcloud = WordCloud(width=1000, height=1000, collocations=False, background_color='white', max_words=2000,
-                      max_font_size=256, random_state=4, min_word_length=4, stopwords=STOPWORDS).generate(str(text_used))
-
-# make wordcloud visualization
-fig = plt.figure(figsize=(10, 10), facecolor=None)
-plt.imshow(wordcloud)
-plt.axis('off')
-st.pyplot(fig)
-
-st.sidebar.header("Insert Text or Upload Files")
-option = st.selectbox(
-    'Insert Text or Upload Files',
-    ('Insert Text', 'Upload File'))
-
-st.sidebar.write('You selected:', option)
 
 
 def remove_pattern(text, pattern_regex):
@@ -231,9 +187,9 @@ if option == 'Insert Text':
             if t in slangs_new.keys():
                 text_new[u] = slangs_new[t]
         data_new = ' '.join(text_new)
-        st.sidebar.write('Cleaned text :', data_new)
+        st.write('Cleaned text :', data_new)
         result_nb = clf.predict(vectorizer.transform([data_new]))
-        st.sidebar.write('Predicted Sentiment Using NB:', result_nb)
+        st.write('Predicted Sentiment Using NB:', result_nb)
 else:
     uploaded_file = st.sidebar.file_uploader("Choose a file")
     if uploaded_file is not None:
@@ -255,4 +211,46 @@ else:
         df['liststring'] = df['B'].apply(lambda x: ' '.join(map(str, x)))
         data_test = vectorizer.transform(df['liststring'])
         y_pred_nb = clf.predict(data_test)
-        st.sidebar.write('Predicted Sentiment Using NB:', y_pred_nb)
+        df['nb_predicted'] = y_pred_nb
+        st.header("Predicted Data")
+        st.write(df['nb_predicted'])
+        # diagram pie
+        st.header("Pie Chart of Classified Sentiment")
+        pie_chart = px.pie(data_frame=df,
+                           names='nb_predicted', color_discrete_sequence=px.colors.sequential.RdBu)
+        st.write(pie_chart)
+        if df.loc[df['nb_predicted'] == 'positive'] is not None:
+            df['filter_pos_nb'] = (
+                df['content'].loc[df['nb_predicted'] == 'positive'])
+            st.header("Positive Classification")
+            # st.write('Positive Classification in Naive Bayes is about:',
+            #          len(df['filter_pos_nb']), 'data')
+            st.write(df['filter_pos_nb'])
+        if df.loc[df['nb_predicted'] == 'neutral'] is not None:
+            df['filter_net_nb'] = (
+                df['content'].loc[df['nb_predicted'] == 'neutral'])
+            st.header("Neutral Classification")
+            # st.write('Neutral Classification in Naive Bayes is about:',
+            #          len(df['filter_net_nb']), 'data')
+            st.write(df['filter_net_nb'])
+        if df.loc[df['nb_predicted'] == 'negative'] is not None:
+            df['filter_neg_nb'] = (
+                df['content'].loc[df['nb_predicted'] == 'negative'])
+            st.header("Negative Classification")
+            # st.write('Negative Classification in Naive Bayes is about:',
+            #          len(df['filter_neg_nb']), 'data')
+            st.write(df['filter_neg_nb'])
+
+        # wordcloud
+        st.header("Wordcloud Result")
+        text_used = df['liststring']
+        text_used = text_used.values.tolist()
+
+        wordcloud = WordCloud(width=1000, height=1000, collocations=False, background_color='white', max_words=500,
+                              max_font_size=256, random_state=3, min_word_length=3, stopwords=data_stopwords).generate(str(text_used).replace("'", ""))
+
+        # make wordcloud visualization
+        fig = plt.figure(figsize=(5, 5), facecolor=None)
+        plt.imshow(wordcloud)
+        plt.axis('off')
+        st.pyplot(fig)
