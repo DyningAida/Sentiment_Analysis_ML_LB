@@ -30,7 +30,6 @@ scores = [analyser.polarity_scores(x)
           for x in df['text_translated']]
 
 df['compound_score'] = [x['compound'] for x in scores]
-
 conditions = [
     (df['compound_score'] > 0), (df['compound_score']
                                  == 0), (df['compound_score'] < 0)
